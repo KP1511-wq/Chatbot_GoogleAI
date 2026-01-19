@@ -1,97 +1,62 @@
-import streamlit as st
-from google import genai
-from datetime import datetime
-import pytz
 
-# ------------------ PAGE CONFIG ------------------
-st.set_page_config(page_title="Gemini Chatbot", page_icon="🤖")
-st.title("🤖 Gemini AI Chatbot")
-st.caption("Powered by Google AI Studio")
+import pandas as pd
+from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from config import llm
 
-# ------------------ GEMINI CLIENT ------------------
-from google import genai
+def load_dataset(csv_path):
+    try:
+        df = pd.read_csv(csv_path)
+        print(f"--- Loaded {csv_path} Successfully ---")
+        return df
+    except FileNotFoundError:
+        print(f"Error: Could not find file at {csv_path}.")
+        exit()
 
-client = genai.Client()
+def get_data_agent(df):
+    return create_pandas_dataframe_agent(
+        llm,
+        df,
+        verbose=True,
+        allow_dangerous_code=True,
+        agent_executor_kwargs={"handle_parsing_errors": True}
+    )
 
-response = client.models.generate_content(
-    model="gemini-2.5-flash-lite",
-    contents="Explain how AI works in a few words",
-)
+def get_joke_chain(column_names):
+    joke_template = """
+    The user asked a question that is NOT related to the dataset.
+    User Question: {question}
 
-print(response.text)
-
-# ------------------ TIME FUNCTION ------------------
-def get_current_datetime():
+    Your Task:
+    1. Make a witty joke about the user's random topic.
+    2. Then, firmly but politely tell them: "I only answer questions about the {columns} dataset."
     """
-    Returns the current date & time in IST
+    
+    # FIX: Use .from_template() to avoid variable conflicts
+    joke_prompt = PromptTemplate.from_template(
+        joke_template, 
+        partial_variables={"columns": column_names}
+    )
+    
+    return joke_prompt | llm | StrOutputParser()
+
+def get_router_chain(column_names):
+    router_template = """
+    You are a classifier. You must decide if a user's question is related to a dataframe 
+    with the following columns: [{columns}].
+
+    If the question requires reading, calculating, or analyzing this data, return "DATA".
+    If the question is unrelated (e.g., general knowledge, weather, greetings, sports), return "JOKE".
+
+    Question: {question}
+    Classification:
     """
-    tz = pytz.timezone("Asia/Kolkata")
-    now = datetime.now(tz)
-    return {
-        "date": now.strftime("%Y-%m-%d"),
-        "time": now.strftime("%H:%M:%S"),
-        "timezone": "Asia/Kolkata"
-    }
-
-# ------------------ HELPERS ------------------
-def is_datetime_query(text):
-    keywords = ["time", "date", "day", "today", "now"]
-    return any(word in text.lower() for word in keywords)
-
-def build_prompt(messages):
-    return "\n".join(
-        f"{'User' if m['role']=='user' else 'Assistant'}: {m['content']}"
-        for m in messages
+    
+    # FIX: Use .from_template() here as well
+    router_prompt = PromptTemplate.from_template(
+        router_template,
+        partial_variables={"columns": column_names}
     )
-
-# ------------------ SESSION STATE ------------------
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-# ------------------ DISPLAY CHAT ------------------
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
-
-# ------------------ USER INPUT ------------------
-user_input = st.chat_input("Ask me anything...")
-
-# ------------------ RESPONSE LOGIC ------------------
-if user_input:
-    # Store & display user message
-    st.session_state.messages.append(
-        {"role": "user", "content": user_input}
-    )
-    with st.chat_message("user"):
-        st.markdown(user_input)
-
-    # ⏰ HANDLE DATE / TIME LOCALLY
-    if is_datetime_query(user_input):
-        now = get_current_datetime()
-        bot_reply = (
-            f"📅 Date: {now['date']}\n"
-            f"⏰ Time: {now['time']}\n"
-            f"🌍 Timezone: {now['timezone']}"
-        )
-
-    # 🤖 NORMAL CHAT → GEMINI
-    else:
-        prompt = build_prompt(st.session_state.messages)
-        try:
-            response = client.models.generate_content(
-                model="gemini-2.5-flash-lite",
-                contents=prompt
-            )
-            bot_reply = response.text
-        except Exception as e:
-            if "RESOURCE_EXHAUSTED" in str(e):
-                bot_reply = "🚫 API quota exhausted. Please enable billing or try later."
-            else:
-                bot_reply = f"❌ Error: {e}"
-
-    # Store & display assistant reply
-    st.session_state.messages.append(
-        {"role": "assistant", "content": bot_reply}
-    )
-    with st.chat_message("assistant"):
-        st.markdown(bot_reply)
+    
+    return router_prompt | llm | StrOutputParser()
