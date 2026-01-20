@@ -5,7 +5,7 @@ import openpyxl
 import sqlite3
 
 
-sqlite_path = "Heart_Disease.db"        # name of the sqlite file
+sqlite_path = "heart.db"        # name of the sqlite file
 table_name = "heart_disease_info"          # name of the table to create
 
 
