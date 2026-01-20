@@ -1,44 +1,43 @@
-# main.py
-from app import load_db, get_sql_agent, get_joke_chain, get_router_chain
+import os
+from backend import get_sql_agent, get_joke_chain, get_router_chain
+from tools_db import get_all_tables, get_columns, get_sample_rows
 
-# 1. Setup Data (Use the .db file now)
-db_path = 'heart.db'
-db = load_db(db_path)
+db_path = "heart.db"
 
-# Get table names for the router's context
-table_info = db.get_table_info()
+# 1. Build Schema Context
+print("--- LOADING SYSTEM ---")
+if not os.path.exists(db_path):
+    print(f"❌ Error: {db_path} missing.")
+    exit()
 
-# 2. Initialize Brains
-sql_agent = get_sql_agent(db)
-joke_chain = get_joke_chain(table_info)
-router = get_router_chain(table_info)
+tables = get_all_tables(db_path)
+schema_info = []
 
-# 3. Run Loop
-def chat_loop():
-    print(f"\n🤖 SYSTEM: Connected to Database. Tables found: {table_info}")
-    print("Type 'exit' to quit.\n")
+for table in tables:
+    cols = get_columns(db_path, table)
+    samples = get_sample_rows(db_path, table, n=1)
+    schema_info.append(f"Table: {table}\nColumns: {cols}\nSample Row: {samples}")
 
-    while True:
-        user_input = input("User: ")
-        if user_input.lower() in ['exit', 'quit']:
-            break
+schema_context = "\n".join(schema_info)
+print(f"✅ Schema Loaded: {tables}")
 
-        try:
-            # Check Intent
-            intent = router.invoke({"question": user_input}).strip().upper()
-            
-            if "DATA" in intent:
-                print(f"DEBUG: Routing to SQL Agent...")
-                # The SQL agent takes the input directly
-                response = sql_agent.invoke({"input": user_input})
-                print(f"🤖 Bot: {response['output']}")
-            else:
-                print(f"DEBUG: Routing to Joke Generator...")
-                response = joke_chain.invoke({"question": user_input})
-                print(f"🤖 Bot: {response}")
+# 2. Init Agents
+sql_agent = get_sql_agent(schema_context)
+router = get_router_chain(schema_context)
+joke_chain = get_joke_chain(schema_context)
 
-        except Exception as e:
-            print(f"Error: {e}")
-
-if __name__ == "__main__":
-    chat_loop()
+# 3. Loop
+while True:
+    user_input = input("\nUser: ")
+    if user_input.lower() == "exit": break
+    
+    try:
+        intent = router.invoke({"question": user_input}).strip().upper()
+        if "DATA" in intent:
+            res = sql_agent.invoke({"input": user_input})
+            print(f"🤖 Bot: {res['output']}")
+        else:
+            res = joke_chain.invoke({"question": user_input})
+            print(f"🤖 Bot: {res}")
+    except Exception as e:
+        print(f"Error: {e}")
