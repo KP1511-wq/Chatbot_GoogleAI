@@ -9,9 +9,9 @@ load_dotenv()
 # os.environ["GOOGLE_API_KEY"] = "AIzaSy..." 
 
 # Initialize Google Gemini
-# We use 'gemini-1.5-flash' as it is fast and cheap for chatbots
+# We use 'gemini-2.5-flash-lite' as it is fast and cheap for chatbots
 llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-pro",
+    model="gemini-2.5-flash-lite",
     temperature=0
 )
 
