@@ -6,9 +6,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Initialize Google Gemini
-# We use 'gemini-2.5-flash-lite' as it is fast and cheap for chatbots
+# We use 'gemini-3-flash' as it is fast and cheap for chatbots
 llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",
+    model="gemini-3-flash",
     temperature=0
 )
 
