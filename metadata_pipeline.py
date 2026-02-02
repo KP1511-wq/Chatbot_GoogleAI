@@ -16,7 +16,7 @@ try:
     from config import model
     logger.info("Model imported successfully.")
 except ImportError:
-    logger.critical("❌ ERROR: Could not find 'config.py'")
+    logger.critical("ERROR: Could not find 'config.py'")
     sys.exit()
 
 # Configuration
