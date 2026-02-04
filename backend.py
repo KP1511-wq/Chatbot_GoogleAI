@@ -50,9 +50,6 @@ def get_data_dictionary() -> Dict[str, List[str]]:
 # ==========================================
 # 2. AGENT PROMPT
 # ==========================================
-# In backend.py
-
-# In backend.py
 
 sql_agent_prompt = f"""
 You are an intelligent agent helping users analyze Heart Disease data.
@@ -137,30 +134,55 @@ agent = agent_builder.compile(checkpointer=checkpointer)
 # ==========================================
 # 5. FASTAPI APPLICATION
 # ==========================================
+# ... (Keep all your imports, tools, and graph definition above exactly as they are) ...
+
+# ==========================================
+# 5. FASTAPI APPLICATION
+# ==========================================
 app = FastAPI(title="Heart Disease Chatbot API")
 
 class ChatRequest(BaseModel):
     message: str
-    config_id: int = 1
+    config_id: int = 1  # This acts as the Thread ID
 
 class ChatResponse(BaseModel):
     response: str
 
 def query_to_chatbot(user_message: str, config_id: int):
-    # Unique thread for conversation history
+    """
+    Runs the LangGraph Agent.
+    """
+    # 1. Setup Config with Thread ID (for memory)
     config: RunnableConfig = {"configurable": {"thread_id": str(config_id)}}
     
-    # Invoke the graph
-    messages = [HumanMessage(content=user_message)]
-    responses = agent.invoke({"messages": messages}, config)
+    # 2. Prepare Input
+    input_messages = [HumanMessage(content=user_message)]
     
-    # Extract final text
+    # 3. Run the Agent (This fixes 'NameError' by using the Graph's internal state)
+    responses = agent.invoke({"messages": input_messages}, config)
+    
+    # 4. Extract Final Content
     return responses['messages'][-1].content
 
 @app.post("/chat", response_model=ChatResponse)
 def chat_endpoint(req: ChatRequest) -> ChatResponse:
-    bot_reply = query_to_chatbot(req.message, req.config_id)
-    return ChatResponse(response=bot_reply)
+    try:
+        # 1. Call the Agent
+        raw_content = query_to_chatbot(req.message, req.config_id)
+        
+        # 2. Fix the "List vs String" Error (Critical for Gemini 1.5)
+        # Gemini often returns [{'type': 'text', 'text': '...'}] instead of just '...'
+        if isinstance(raw_content, list):
+            bot_reply = "".join([part.get('text', '') for part in raw_content if isinstance(part, dict)])
+        else:
+            bot_reply = str(raw_content)
+
+        # 3. Return Clean Response
+        return ChatResponse(response=bot_reply)
+
+    except Exception as e:
+        print(f"❌ Error in chat_endpoint: {e}")
+        return ChatResponse(response="I encountered an error processing your request.")
 
 if __name__ == "__main__":
     # Run server
