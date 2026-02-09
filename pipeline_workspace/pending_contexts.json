@@ -1,0 +1,135 @@
+{
+    "925a3249": {
+        "id": "925a3249",
+        "source": "SQLITE: Auto",
+        "columns": [
+            "longitude",
+            "latitude",
+            "housing_median_age",
+            "total_rooms",
+            "total_bedrooms",
+            "population",
+            "households",
+            "median_income",
+            "median_house_value",
+            "ocean_proximity"
+        ],
+        "ai_summary": "Here's the analysis:\n\n1.  **Business Summary:** This dataset provides detailed geographical, structural, demographic, and economic attributes for housing districts, primarily used to understand and predict median house values.\n2.  **Keyword Tags:** Housing, Geospatial, Demographics",
+        "business_tags": [
+            "pending_review"
+        ],
+        "status": "pending_review",
+        "timestamp": "2026-01-30T13:17:59.649285",
+        "user_notes": "I verified this data, it looks good."
+    },
+    "e067bd80": {
+        "id": "e067bd80",
+        "source": "File: housing.csv",
+        "columns": [
+            "longitude",
+            "latitude",
+            "housing_median_age",
+            "total_rooms",
+            "total_bedrooms",
+            "population",
+            "households",
+            "median_income",
+            "median_house_value",
+            "ocean_proximity"
+        ],
+        "ai_summary": "AI Error: ('A certificate chain processed, but terminated in a root certificate which is not trusted by the trust provider.',)",
+        "business_tags": [
+            "pending_review"
+        ],
+        "status": "pending_review",
+        "timestamp": "2026-02-02T10:32:30.571192"
+    },
+    "828342c9": {
+        "id": "828342c9",
+        "source": "File: housing.csv",
+        "columns": [
+            "longitude",
+            "latitude",
+            "housing_median_age",
+            "total_rooms",
+            "total_bedrooms",
+            "population",
+            "households",
+            "median_income",
+            "median_house_value",
+            "ocean_proximity"
+        ],
+        "ai_summary": "Here's the analysis:\n\n1.  **Business Summary:** This dataset provides detailed geographic, demographic, and housing characteristic data for California block groups, primarily used for real estate valuation and market analysis.\n2.  **Keyword Tags:** Housing, Real Estate, Demographics",
+        "business_tags": [
+            "pending_review"
+        ],
+        "status": "pending_review",
+        "timestamp": "2026-02-02T10:33:31.264333"
+    },
+    "c4829a36": {
+        "id": "c4829a36",
+        "source": "File: housing.csv",
+        "columns": [
+            "longitude",
+            "latitude",
+            "housing_median_age",
+            "total_rooms",
+            "total_bedrooms",
+            "population",
+            "households",
+            "median_income",
+            "median_house_value",
+            "ocean_proximity"
+        ],
+        "ai_summary": "Here's the analysis:\n\n1.  **Business Summary:** This dataset provides detailed geographic, demographic, and housing characteristic data for California block groups, primarily used for real estate valuation and market analysis.\n2.  **Keyword Tags:** Housing, Real Estate, Demographics",
+        "business_tags": [
+            "pending_review"
+        ],
+        "status": "pending_review",
+        "timestamp": "2026-02-02T10:36:37.726154"
+    },
+    "58f0fce4": {
+        "id": "58f0fce4",
+        "source": "File: housing.csv",
+        "columns": [
+            "longitude",
+            "latitude",
+            "housing_median_age",
+            "total_rooms",
+            "total_bedrooms",
+            "population",
+            "households",
+            "median_income",
+            "median_house_value",
+            "ocean_proximity"
+        ],
+        "ai_summary": "I am analyzing the 'housing.csv' file fetched from the file system.\n\n**Business Summary:**\nThis dataset provides valuable insights into California housing market characteristics, including location, age, size, income, and sale prices. It can be used for real estate market analysis, predictive modeling of house values, and understanding factors influencing housing affordability.\n\n**Tags:**\n* Real Estate\n* California Housing\n* Predictive Analytics",
+        "business_tags": [
+            "pending_review"
+        ],
+        "status": "pending_review",
+        "timestamp": "2026-02-05T11:51:19.892490"
+    },
+    "04bbca30": {
+        "id": "04bbca30",
+        "source": "SQLITE: Housing Data",
+        "columns": [
+            "longitude",
+            "latitude",
+            "housing_median_age",
+            "total_rooms",
+            "total_bedrooms",
+            "population",
+            "households",
+            "median_income",
+            "median_house_value",
+            "ocean_proximity"
+        ],
+        "ai_summary": "I am analyzing the 'housing' table fetched from the SQLite database.\n\n**Business Summary:**\nThis dataset provides valuable insights into California housing market characteristics, including location, age, size, occupancy, income, and sale prices. It is crucial for real estate market analysis, investment strategies, urban planning, and predictive modeling of housing values.\n\n**Tags:**\n#RealEstate #HousingMarket #CaliforniaData",
+        "business_tags": [
+            "pending_review"
+        ],
+        "status": "pending_review",
+        "timestamp": "2026-02-05T16:44:38.506437"
+    }
+}
