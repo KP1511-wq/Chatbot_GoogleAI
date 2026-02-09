@@ -72,6 +72,16 @@ app = FastAPI(title="GenAI Universal Data Pipeline")
 
 
 # --- 2. DATA MODELS ---
+# --- NEW: THE "SAFE" HOUSING API TOOL ---
+# --- UPDATED: HousingQuery Model ---
+class HousingQuery(BaseModel):
+    ocean_proximity: Optional[str] = None
+    min_price: Optional[float] = None
+    max_price: Optional[float] = None
+    limit: int = 5  # Default limit for results
+    # NEW: Sorting Parameters
+    sort_by: Optional[str] = None  # e.g., "median_house_value"
+    sort_order: Optional[str] = "ASC"  # "ASC" or "DESC"
 
 class DbIngestRequest(BaseModel):
     connection_string: str  # e.g., "housing.db" OR "mongodb://localhost:27017/"
@@ -133,6 +143,7 @@ def fetch_data(conn_str: str, db_type: str, target: str = None, query: str = Non
 def run_ai_analysis(df: pd.DataFrame, source_info: str) -> Dict:
     """The 'Gen AI generates context' Node."""
     data_preview = df.head(5).to_string(index=False)
+    total_rows = len(df)
     
    
     # ... inside run_ai_analysis function ...
@@ -150,7 +161,7 @@ def run_ai_analysis(df: pd.DataFrame, source_info: str) -> Dict:
     {data_preview}
     
     TASK:
-    1. Context Statement: Start by explicitly stating what you are analyzing and where it was fetched from (e.g., "I am analyzing the 'housing' table fetched from the SQLite database...").
+    1. Context Statement: Start by explicitly stating what you are analyzing and where it was fetched from (e.g., "I am analyzing the 'housing' table fetched from the SQLite database...").Write a summary.Mention the scale of the data(row count).
     2. Business Summary: Write a concise description of the data's value.
     3. Tags: Suggest 3 technical or business keyword tags.
     """
@@ -168,6 +179,7 @@ def run_ai_analysis(df: pd.DataFrame, source_info: str) -> Dict:
         "id": context_id,
         "source": source_info,
         "columns": list(df.columns),
+        "rows": total_rows,
         "ai_summary": ai_response,
         "business_tags": ["pending_review"],
         "status": "pending_review",
@@ -254,6 +266,47 @@ async def commit_context(review_id: str):
     save_json(FINAL_DB_JSON, final_db)
     
     return {"message": "Committed to Database", "record": record}
+
+@app.post("/tools/housing_query")
+async def query_housing_data(params: HousingQuery):
+    try:
+        conn = sqlite3.connect(os.path.join(WORKING_DIR, "housing.db"))
+        
+        # Start Query
+        query = "SELECT * FROM housing WHERE 1=1"
+        args = []
+        
+        # 1. Apply Filters
+        if params.ocean_proximity:
+            query += " AND ocean_proximity = ?"
+            args.append(params.ocean_proximity)
+        if params.min_price:
+            query += " AND median_house_value >= ?"
+            args.append(params.min_price)
+        if params.max_price:
+            query += " AND median_house_value <= ?"
+            args.append(params.max_price)
+            
+        # 2. NEW: Apply Sorting
+        # (Allow sorting only by safe columns to prevent SQL injection)
+        valid_sort_cols = ["median_house_value", "median_income", "housing_median_age"]
+        if params.sort_by in valid_sort_cols:
+            order = "DESC" if params.sort_order.upper() == "DESC" else "ASC"
+            query += f" ORDER BY {params.sort_by} {order}"
+            
+        # 3. Apply Limit
+        query += f" LIMIT {params.limit}"
+        
+        df = pd.read_sql_query(query, conn, params=args)
+        conn.close()
+        
+        if df.empty:
+            return {"result": "No houses found."}
+            
+        return {"result": df.to_dict(orient="records")}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
