@@ -1,24 +1,18 @@
 import os
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
+api_key = os.getenv("GROQ_API_KEY")
 
-# Initialize Google Gemini
-# We use 'gemini-2.5-flash-lite' as it is fast and cheap for chatbots
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash-lite",
-    temperature=0
-)
-
-# Alias it as 'model' in case your other scripts look for that name
-model = llm
-
-if __name__ == "__main__":
+if not api_key:
+    print("❌ GROQ_API_KEY not found in .env. Please set it to use the model.")
+    model = None
+else:
+    print("Connecting to GROQ...")
     try:
-        response = llm.invoke("Hello, are you working?")
-        print("✅ Connection Successful!")
-        print(f"🤖 Response: {response.content}")
+        model = ChatGroq(api_key=api_key,model_name="llama-3.1-8b-instant",temperature=0)
+        print("✅ Connected to GROQ LLM.")
     except Exception as e:
-        print(f"❌ Connection Failed: {e}")
+        print(f"❌ Error connecting to GROQ: {e}")
+        model = None
